@@ -1,0 +1,34 @@
+pwd
+ls
+ls -l
+ls -la
+cd
+mkdir
+touch
+cp
+mv
+rm
+find
+
+Hands-on Lab
+
+Created a DevOps training directory structure and practiced:
+
+Creating directories
+Creating files
+Copying files
+Moving/renaming files
+Finding files
+Navigating using absolute and relative paths
+Interview Questions
+What is Linux?
+
+Linux is an open-source operating system kernel used as the foundation for many Linux distributions.
+
+What is the difference between / and /root?
+
+/ is the root of the Linux filesystem, while /root is the home directory of the root user.
+
+What is the difference between an absolute and relative path?
+
+An absolute path starts from / and specifies the complete location. A relative path specifies a location relative to the current working directory.
