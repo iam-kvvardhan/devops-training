@@ -42,12 +42,13 @@ Owner  → rwx
 Group  → r-x
 Others → r-x
 
+
 ### 644
 
-```text
 Owner  → rw-
 Group  → r--
 Others → r--
+
 
 ### 600
 
