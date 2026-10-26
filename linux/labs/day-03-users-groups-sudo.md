@@ -1,293 +1,112 @@
-# Day 3 — Linux Users, Groups, Ownership & sudo
+# Day 3 — Linux Users, Groups & Permissions
 
-## Topics Covered
+## What I Learned
 
-- Linux users
-- UID and GID
-- Primary groups
-- Secondary (supplementary) groups
-- User and group management
-- File and directory ownership
-- Group-based access control
-- `sudo`
-- `su`
-- Permission troubleshooting
+### 1. Users
 
----
+A **user** represents an individual account in Linux.
 
-## 1. Linux Users
+```bash
+whoami
+id
+```
 
-A Linux user represents an individual account that can interact with the system.
+- `whoami` → shows the current user
+- `id` → shows UID, GID and group memberships
+- `UID` → User ID
+- `GID` → Group ID
 
-Every user has a unique numeric **UID (User ID)**.
-
-For example:
+Example:
 
 ```text
 vinay → UID 1000
 root  → UID 0
 ```
 
-The `root` user has UID `0` and has administrative privileges.
+---
 
-### Real-life example
+### 2. Groups
 
-In a company server, different people or services may have different accounts:
+A **group** is a collection of users used to manage permissions efficiently.
+
+There are two important types:
+
+- **Primary group** → default/main group of a user
+- **Secondary group** → additional groups the user belongs to
+
+Example:
 
 ```text
 developer
-devopsadmin
-jenkins
-www-data
+├── Primary group → developer
+└── Secondary group → devops
 ```
 
-Each account can have different permissions and access.
+Real-life example:
 
----
+> Instead of giving 50 developers access individually, add them to a `devops` group and give the group access to the required directory.
 
-## 2. UID and GID
-
-### UID
-
-UID stands for **User ID**.
-
-It is the numeric identifier used by Linux to identify a user.
-
-### GID
-
-GID stands for **Group ID**.
-
-It is the numeric identifier used by Linux to identify a group.
-
-The `id` command can display this information:
-
-```text
-uid=1000(vinay) gid=1000(vinay) groups=...
-```
-
----
-
-## 3. Primary Group
-
-Every Linux user has one **primary group**.
-
-The primary group is the user's default group.
-
-For example:
-
-```text
-User: developer
-Primary group: developer
-```
-
-When a user creates a new file, the file is commonly associated with the user's primary group.
-
-### Real-life example
-
-If a developer creates:
-
-```text
-application.log
-```
-
-the file might look like:
-
-```text
-developer developer application.log
-```
-
-The first `developer` is the owner and the second `developer` is the group owner.
-
----
-
-## 4. Secondary Groups
-
-A user can also belong to additional groups called **secondary/supplementary groups**.
-
-For example:
-
-```text
-developer
-├── Primary group: developer
-└── Secondary group: devops
-```
-
-Secondary groups are commonly used to provide additional access to resources.
-
-### Real-life example
-
-Imagine 50 developers need access to application deployment files.
-
-Instead of changing permissions for each developer individually, an administrator can create a group:
-
-```text
-devops
-```
-
-and add the required developers to it.
-
-The directory can then be configured with:
-
-```text
-Owner: root
-Group: devops
-```
-
-This makes access management much easier.
-
----
-
-## 5. Viewing User and Group Information
-
-### Check current user
-
-```bash
-whoami
-```
-
-### View detailed user and group information
-
-```bash
-id
-```
-
-### View groups
-
-```bash
-groups
-```
-
-### View groups for a specific user
+Useful commands:
 
 ```bash
 groups developer
-```
-
----
-
-## 6. User and Group Management
-
-Created a Linux group:
-
-```bash
 sudo groupadd devops
-```
-
-Created a user:
-
-```bash
 sudo useradd -m developer
-```
-
-Created a password:
-
-```bash
-sudo passwd developer
-```
-
-Added the developer to the `devops` secondary group:
-
-```bash
 sudo usermod -aG devops developer
 ```
 
-### Important
-
-The `-aG` option means:
-
-- `-a` → append
-- `-G` → supplementary/secondary groups
-
-Using `-a` prevents accidentally replacing the user's existing supplementary group memberships.
-
-Verified the membership using:
-
-```bash
-groups developer
-```
-
-Output showed:
-
-```text
-developer : developer devops
-```
-
-Therefore:
-
-```text
-Primary group   → developer
-Secondary group → devops
-```
-
 ---
 
-## 7. File and Directory Ownership
+### 3. Ownership
 
-Linux files and directories have an owner and a group owner.
+Every file/directory has an **owner** and a **group owner**.
+
+```bash
+ls -l
+```
 
 Example:
 
 ```text
-root devops
+root devops app.log
 ```
 
-means:
+Means:
 
 ```text
 Owner → root
 Group → devops
 ```
 
-Ownership can be changed using `chown`.
-
-Example:
+Change ownership:
 
 ```bash
 sudo chown root:devops /opt/devops-app
-```
-
-This sets:
-
-```text
-Owner → root
-Group → devops
 ```
 
 ---
 
-## 8. Group-Based Directory Access
+### 4. Group-Based Permissions
 
-Created an application directory:
+Created:
 
-```bash
-sudo mkdir -p /opt/devops-app
+```text
+/opt/devops-app
 ```
 
-Created an application log:
+Set ownership:
 
-```bash
-sudo touch /opt/devops-app/app.log
+```text
+root:devops
 ```
 
-Changed the directory ownership:
-
-```bash
-sudo chown root:devops /opt/devops-app
-```
-
-Configured directory permissions:
+Set permissions:
 
 ```bash
 sudo chmod 770 /opt/devops-app
 ```
 
-The resulting permissions were:
-
-```text
-drwxrwx---
-```
-
-Meaning:
+`770` means:
 
 ```text
 Owner  → rwx
@@ -295,267 +114,125 @@ Group  → rwx
 Others → ---
 ```
 
-Since `developer` belongs to the `devops` group, the developer receives the group permissions.
+Since `developer` belongs to `devops`, the developer can access the directory.
+
+```text
+developer
+    ↓
+member of devops
+    ↓
+directory group = devops
+    ↓
+group permission = rwx
+    ↓
+access ✅
+```
 
 ---
 
-## 9. Permission Troubleshooting
+### 5. Permission Troubleshooting
 
-When `vinay` tried:
+When `vinay` received:
+
+```text
+Permission denied
+```
+
+for:
 
 ```bash
 ls -l /opt/devops-app
 ```
 
-the system returned:
-
-```text
-Permission denied
-```
-
-Instead of immediately changing the permissions, I investigated the problem.
-
-Checked the directory:
+I checked:
 
 ```bash
 ls -ld /opt/devops-app
-```
-
-Output:
-
-```text
-drwxrwx--- root devops /opt/devops-app
-```
-
-Checked the parent directory:
-
-```bash
 ls -ld /opt
 ```
 
-Output showed that `/opt` itself was accessible.
-
 Then checked group membership.
 
-`vinay` was not a member of `devops`, while:
+The problem was:
 
 ```text
-developer : developer devops
+vinay → not a member of devops
+developer → member of devops
 ```
 
-showed that `developer` was a member of the `devops` group.
+Therefore, `developer` had access through the group permissions while `vinay` did not.
 
-Therefore:
-
-```text
-vinay
-  ↓
-Not a member of devops
-  ↓
-Others permissions = ---
-  ↓
-Permission denied
-```
-
-Whereas:
-
-```text
-developer
-  ↓
-Member of devops
-  ↓
-Group permissions = rwx
-  ↓
-Access granted
-```
+**Important:** Don't blindly use `chmod 777`. First identify the required access and give the minimum necessary permissions.
 
 ---
 
-## 10. Testing Access as Developer
+### 6. sudo vs su
 
-Tested access using:
+**sudo**
 
-```bash
-sudo -u developer ls -l /opt/devops-app
-```
-
-The developer was able to access the directory.
-
-Created a file:
+Run a specific command with elevated privileges:
 
 ```bash
-sudo -u developer touch /opt/devops-app/test.txt
+sudo command
 ```
 
-Verified the result:
-
-```bash
-sudo -u developer ls -l /opt/devops-app
-```
-
-The file was successfully created.
-
-This demonstrated how **group membership + directory permissions + ownership** work together.
-
----
-
-## 11. sudo
-
-`sudo` allows an authorized user to execute a command with elevated privileges.
-
-Example:
-
-```bash
-sudo apt update
-```
-
-The user remains logged in as their normal account, but the particular command runs with elevated privileges.
-
-### Real-life example
-
-A DevOps engineer may normally work as:
-
-```text
-vinay
-```
-
-but need administrative privileges to:
-
-- Install packages
-- Modify system configuration
-- Restart services
-- Change ownership
-- Change permissions
-
-Instead of permanently logging in as root, they can use `sudo` for administrative commands.
-
----
-
-## 12. sudo -u
-
-`sudo` can also execute a specific command as another user.
-
-Example:
+Run a command as another user:
 
 ```bash
 sudo -u developer whoami
 ```
 
-Output:
+**su**
 
-```text
-developer
-```
-
-The command runs as `developer`, but the current shell remains the original user.
-
----
-
-## 13. su
-
-`su` means **switch user**.
-
-Example:
+Switch the current shell to another user:
 
 ```bash
 su - developer
 ```
 
-This switches the current shell to the `developer` user.
-
-After switching:
-
-```bash
-whoami
-```
-
-returns:
-
-```text
-developer
-```
-
-To return to the previous shell:
+Return to the previous shell:
 
 ```bash
 exit
 ```
 
-### Difference
+### Easy way to remember
 
 ```text
-sudo -u developer command
-        ↓
-Run one command as developer
-
-
-su - developer
-        ↓
-Switch the current shell to developer
+sudo → Run a command
+su   → Switch user
 ```
 
 ---
 
-## 14. Important Commands Practiced
+## Commands to Remember
 
 | Command | Purpose |
 |---|---|
-| `whoami` | Show current user |
-| `id` | Show UID, GID and group memberships |
-| `groups` | Show group memberships |
-| `useradd` | Create a user |
-| `passwd` | Set/change a user's password |
-| `groupadd` | Create a group |
-| `usermod -aG` | Add a user to a supplementary group |
-| `chown` | Change ownership |
+| `whoami` | Current user |
+| `id` | UID, GID & groups |
+| `groups` | Group membership |
+| `useradd` | Create user |
+| `groupadd` | Create group |
+| `usermod -aG` | Add user to secondary group |
+| `ls -l` | Check permissions/ownership |
 | `chmod` | Change permissions |
-| `sudo` | Execute a command with elevated privileges |
-| `sudo -u` | Execute a command as another user |
+| `chown` | Change ownership |
+| `sudo` | Run with elevated privileges |
 | `su` | Switch user |
 
----
-
-## Key Learnings
-
-1. A Linux user represents an individual account.
-2. A group is a collection of users used to manage access efficiently.
-3. Every user has one primary group.
-4. A user can belong to multiple secondary/supplementary groups.
-5. UID identifies a user numerically.
-6. GID identifies a group numerically.
-7. File access depends on ownership, group membership and permissions.
-8. `chown` changes ownership.
-9. `chmod` changes permissions.
-10. `sudo` provides temporary elevated privileges for authorized commands.
-11. `sudo -u` can execute a specific command as another user.
-12. `su` switches the current shell to another user.
-13. Group-based permissions are useful for managing access for multiple users.
-14. Permission problems should be investigated before changing permissions.
-
----
-
-## Interview Takeaway
-
-When troubleshooting a Linux permission issue, I should not immediately use commands such as `chmod 777`.
-
-A better approach is:
+## Key Takeaway
 
 ```text
-1. Identify the current user
-        ↓
-2. Check file/directory permissions
-        ↓
-3. Check ownership
-        ↓
-4. Check group membership
-        ↓
-5. Check parent directory permissions
-        ↓
-6. Identify the actual cause
-        ↓
-7. Apply the minimum required permission
+User
+ ↓
+Group membership
+ ↓
+File/Directory ownership
+ ↓
+Permissions
+ ↓
+Access
 ```
 
-## Status
-
-Day 3 — Completed ✅
+**Day 3 — Completed ✅**
